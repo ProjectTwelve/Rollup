@@ -4,9 +4,10 @@ import { ethers } from "hardhat"
 import { bigIntToUnpaddedBuffer, bufArrToArr } from "@ethereumjs/util"
 import { FeeMarketEIP1559Transaction } from "@ethereumjs/tx"
 import { RollUpgradable } from "../typechain-types/contracts/RollUpgradable"
+import { randomBytes } from "crypto"
 
 const common = new Common({ chain: Chain.Mainnet, hardfork: Hardfork.London })
-const privateKey_ = process.env.ACCOUNTS!.toString()
+const privateKey_ = randomBytes(32);
 
 describe("rollUpgradable", async function () {
   let rollUpgradable: RollUpgradable
@@ -31,13 +32,11 @@ describe("rollUpgradable", async function () {
       accessList: [],
     }
 
-    const privateKey = Buffer.from(privateKey_, "hex")
     const tx = FeeMarketEIP1559Transaction.fromTxData(txData, { common })
-    const signedTx = tx.sign(privateKey)
+    const signedTx = tx.sign(privateKey_)
     const rawTxHash = signedTx.hash().toString("hex")
-    let { v, r, s } = signedTx
+    let { v, r, s } = signedTx;
     const rollUpTx = {
-      from: signedTx.getSenderAddress().toString(),
       txType: 2,
       chainId: 1,
       nonce: 0,
@@ -52,9 +51,10 @@ describe("rollUpgradable", async function () {
       r: "0x" + bigIntToUnpaddedBuffer(r!).toString("hex"),
       s: "0x" + bigIntToUnpaddedBuffer(s!).toString("hex"),
     }
+    console.log("from: ",  signedTx.getSenderAddress().toString())
     const res = await rollUpgradable.verifyTxSet([rollUpTx])
-    let txHash
-    ;(await res.wait()).events!.forEach(async (x) => {
+    let txHash;
+    (await res.wait()).events!.forEach(async (x) => {
       if (x.event === "SyncTx") {
         txHash = x.args!.txHash
       }
@@ -116,7 +116,6 @@ describe("rollUpgradable", async function () {
     {
       let { v, r, s } = signedTx1
       const rollUpTx1 = {
-        from: signedTx1.getSenderAddress().toString(),
         txType: 2,
         chainId: 1,
         nonce: 0,
@@ -136,7 +135,6 @@ describe("rollUpgradable", async function () {
     {
       let { v, r, s } = signedTx2
       const rollUpTx2 = {
-        from: signedTx2.getSenderAddress().toString(),
         txType: 2,
         chainId: 1,
         nonce: 1,
@@ -156,7 +154,6 @@ describe("rollUpgradable", async function () {
     {
       let { v, r, s } = signedTx3
       const rollUpTx3 = {
-        from: signedTx3.getSenderAddress().toString(),
         txType: 2,
         chainId: 1,
         nonce: 2,
