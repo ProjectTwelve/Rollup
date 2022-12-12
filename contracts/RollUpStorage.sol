@@ -2,11 +2,14 @@
 pragma solidity ^0.8.17;
 
 contract RollUpStorage {
- 
+  // sidechain id
+  uint256 internal _chainId;
+
+
   // verified transaction
   mapping(bytes32 => address) internal _verified;
   struct Tx {
-    bytes32 rlpTxHash;
+    bytes rlpTx;
     uint8 v;
     bytes32 r;
     bytes32 s;
@@ -14,4 +17,5 @@ contract RollUpStorage {
 
   uint256[49] private __gap;
 }
+
 
