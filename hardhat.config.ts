@@ -52,7 +52,7 @@ const config: HardhatUserConfig = {
         // },
     },
     gasReporter: {
-        enabled: true,
+        enabled: false,
     },
     namedAccounts: {
         deployer: {

@@ -7,3 +7,4 @@ interface IRollUpgradable {
 
   function verifyTxSet(RollUpStorage.Tx[] calldata txs) external returns (bool);
 }
+

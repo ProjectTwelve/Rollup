@@ -6,8 +6,8 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "./RollUpStorage.sol";
 import "./interfaces/IRollUpgradable.sol";
 import "./access/SafeOwnableUpgradeable.sol";
-import "./libraries/RLPReader.sol";
-import "./libraries/RLPEncode.sol";
+
+
 
 contract RollUpgradable is
   RollUpStorage,
@@ -23,21 +23,19 @@ contract RollUpgradable is
   function verifyTxSet(
     Tx[] calldata txs
   ) external virtual override returns (bool) {
-    uint256 len = txs.length;
-    if (len == 0) revert CommonError.ArrayCanNotEmpty();
+    bytes32 hashTx;
+    uint8 v;
+    bytes32 r;
+    bytes32 s;
 
-    for (uint i = 0; i < len; i++) {
+    for (uint256 i = 0; i < txs.length; i++) {
       Tx calldata t = txs[i];
-
-      // skip if transaction already verified
-      bytes32 txHash = _computeTxHash(t);
-      if (_isVerified[txHash]) {
+      (hashTx, v, r, s) = _decodeTx(t);
+      if (_verified[hashTx] != address(0)) {
         continue;
       }
-      bytes32 dataHash = keccak256(_rlpEncdeTx(t));
-      if(!_verifyTx(dataHash, t.from, t.chainId, t.v, t.r, t.s))
-        revert CommonError.FailedVerifyTx();
-      _syncTx(_computeTxHash(t));
+      address from = _verifyTx(hashTx, v, r, s);
+      _syncTx(from, hashTx);
     }
 
     return true;
@@ -46,8 +44,8 @@ contract RollUpgradable is
   /**
    * @dev initialize contract
    */
-  function initialize(address owner_, uint256 chainId_) public initializer {
-    _chainId = chainId_;
+  function initialize(address owner_) public initializer {
+
     __Ownable_init_unchained(owner_);
   }
 
@@ -56,26 +54,22 @@ contract RollUpgradable is
    */
   function _verifyTx(
     bytes32 dataHash,
-    address singer,
-    uint chainId,
     uint8 v,
     bytes32 r,
     bytes32 s
-  ) internal view returns (bool) {
-    // check if the transaction is from the target chain
-    if (_chainId != chainId) revert CommonError.chainIdNotMatch();
-
+  ) internal pure returns (address signer) {
+    
     // ecrecover
     uint8 _v = v == 1 || v == 0 ? 27 + v : v;
-    return singer == ECDSA.recover(dataHash, _v, r, s);
+    signer = ECDSA.recover(dataHash, _v, r, s);
   }
 
   /**
    * @dev sync tx from side chain
    */
-  function _syncTx(bytes32 txHash) internal {
-    _isVerified[txHash] = true;
-    emit SyncTx(txHash);
+  function _syncTx(address from, bytes32 dataHash) internal {
+    _verified[dataHash] = from;
+    emit SyncTx(dataHash);
   }
 
   /**
@@ -85,52 +79,15 @@ contract RollUpgradable is
     address newImplementation
   ) internal override onlyOwner {}
 
-  /**
-   * @dev computes a sha3-256 hash of the serialized tx.
-   */
-  function _computeTxHash(Tx calldata t) internal pure returns (bytes32) {
-    bytes memory txType = RLPEncode.encodeUint(t.txType);
-    bytes[] memory tmp = new bytes[](12);
-    tmp[0] = RLPEncode.encodeUint(t.chainId);
-    tmp[1] = RLPEncode.encodeUint(t.nonce);
-    tmp[2] = RLPEncode.encodeUint(t.maxPriorityFeePerGas);
-    tmp[3] = RLPEncode.encodeUint(t.maxFeePerGas);
-    tmp[4] = RLPEncode.encodeUint(t.gasLimit);
-    tmp[5] = RLPEncode.encodeAddress(t.to);
-    tmp[6] = RLPEncode.encodeUint(t.value);
-    tmp[7] = RLPEncode.encodeBytes(t.data);
-    tmp[8] = RLPEncode.encodeList(t.accessList);
-    tmp[9] = RLPEncode.encodeUint(t.v);
-    tmp[10] = RLPEncode.encodeBytes(_bytes32ToBytes(t.r));
-    tmp[11] = RLPEncode.encodeBytes(_bytes32ToBytes(t.s));
+  function _decodeTx(
+    Tx calldata t
+  ) internal pure returns (bytes32, uint8, bytes32, bytes32) {
+    bytes32 txHash = t.rlpTxHash;
+    uint8 v = t.v;
+    bytes32 r = t.r;
+    bytes32 s = t.s;
 
-    return keccak256(RLPEncode.concat(txType, RLPEncode.encodeList(tmp)));
-  }
-
-  /**
-   * @dev RLP encodes the signed part of tx
-   */
-  function _rlpEncdeTx(Tx calldata t) internal pure returns (bytes memory) {
-    bytes memory txType = RLPEncode.encodeUint(t.txType);
-    bytes[] memory tmp = new bytes[](9);
-    tmp[0] = RLPEncode.encodeUint(t.chainId);
-    tmp[1] = RLPEncode.encodeUint(t.nonce);
-    tmp[2] = RLPEncode.encodeUint(t.maxPriorityFeePerGas);
-    tmp[3] = RLPEncode.encodeUint(t.maxFeePerGas);
-    tmp[4] = RLPEncode.encodeUint(t.gasLimit);
-    tmp[5] = RLPEncode.encodeAddress(t.to);
-    tmp[6] = RLPEncode.encodeUint(t.value);
-    tmp[7] = RLPEncode.encodeBytes(t.data);
-    tmp[8] = RLPEncode.encodeList(t.accessList);
-
-    return RLPEncode.concat(txType, RLPEncode.encodeList(tmp));
-  }
-
-  function _bytes32ToBytes(bytes32 b)internal pure returns (bytes memory){
-    bytes memory tmp = new bytes(32);
-    for(uint i=0;i<32;i++){
-        tmp[i] = b[i];
-    }
-    return tmp;
+    return (txHash, v, r, s);
   }
 }
+

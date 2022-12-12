@@ -4,9 +4,11 @@ import { ethers } from "hardhat"
 import { bigIntToUnpaddedBuffer, bufArrToArr } from "@ethereumjs/util"
 import { FeeMarketEIP1559Transaction } from "@ethereumjs/tx"
 import { RollUpgradable } from "../typechain-types/contracts/RollUpgradable"
+import { randomBytes } from "crypto"
+import { keccak256, RLP } from "ethers/lib/utils"
 
 const common = new Common({ chain: Chain.Mainnet, hardfork: Hardfork.London })
-const privateKey_ = process.env.ACCOUNTS!.toString()
+const privateKey_ = randomBytes(32);
 
 describe("rollUpgradable", async function () {
   let rollUpgradable: RollUpgradable
@@ -14,7 +16,7 @@ describe("rollUpgradable", async function () {
     const RollUpgradable = await ethers.getContractFactory("RollUpgradable")
     rollUpgradable = await RollUpgradable.deploy()
     const accounts = await ethers.getSigners()
-    rollUpgradable.initialize(accounts[0].address, 1)
+    rollUpgradable.initialize(accounts[0].address)
   })
 
   it("Should verify single tx success", async () => {
@@ -31,35 +33,17 @@ describe("rollUpgradable", async function () {
       accessList: [],
     }
 
-    const privateKey = Buffer.from(privateKey_, "hex")
     const tx = FeeMarketEIP1559Transaction.fromTxData(txData, { common })
-    const signedTx = tx.sign(privateKey)
-    const rawTxHash = signedTx.hash().toString("hex")
+    const signedTx = tx.sign(privateKey_)
+    
     let { v, r, s } = signedTx
-    const rollUpTx = {
-      from: signedTx.getSenderAddress().toString(),
-      txType: 2,
-      chainId: 1,
-      nonce: 0,
-      maxPriorityFeePerGas: 1,
-      maxFeePerGas: 255,
-      gasLimit: 40000000,
-      to: "0xcccccccccccccccccccccccccccccccccccccccc",
-      value: 100000,
-      data: "0x1a8451e600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-      accessList: [],
+    const rollUpTx ={
+      rlpTxHash:"0x"+signedTx.hash().toString('hex'),
       v: v!.toString(),
       r: "0x" + bigIntToUnpaddedBuffer(r!).toString("hex"),
       s: "0x" + bigIntToUnpaddedBuffer(s!).toString("hex"),
     }
-    const res = await rollUpgradable.verifyTxSet([rollUpTx])
-    let txHash
-    ;(await res.wait()).events!.forEach(async (x) => {
-      if (x.event === "SyncTx") {
-        txHash = x.args!.txHash
-      }
-    })
-    expect(await txHash).to.be.equal("0x" + rawTxHash)
+    const res = await rollUpgradable.verifyTxSet([rollUpTx]);
   })
 
   it("Should verify tx set success", async () => {
@@ -116,17 +100,7 @@ describe("rollUpgradable", async function () {
     {
       let { v, r, s } = signedTx1
       const rollUpTx1 = {
-        from: signedTx1.getSenderAddress().toString(),
-        txType: 2,
-        chainId: 1,
-        nonce: 0,
-        maxPriorityFeePerGas: 1,
-        maxFeePerGas: 255,
-        gasLimit: 40000000,
-        to: "0xcccccccccccccccccccccccccccccccccccccccc",
-        value: 100000,
-        data: "0x1a8451e600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        accessList: [],
+        rlpTxHash:"0x"+signedTx1.hash().toString('hex'),
         v: v!.toString(),
         r: "0x" + bigIntToUnpaddedBuffer(r!).toString("hex"),
         s: "0x" + bigIntToUnpaddedBuffer(s!).toString("hex"),
@@ -136,17 +110,7 @@ describe("rollUpgradable", async function () {
     {
       let { v, r, s } = signedTx2
       const rollUpTx2 = {
-        from: signedTx2.getSenderAddress().toString(),
-        txType: 2,
-        chainId: 1,
-        nonce: 1,
-        maxPriorityFeePerGas: 1,
-        maxFeePerGas: 255,
-        gasLimit: 40000000,
-        to: "0xcccccccccccccccccccccccccccccccccccccccc",
-        value: 100000,
-        data: "0x1a8451e600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        accessList: [],
+        rlpTxHash:"0x"+signedTx2.hash().toString('hex'),
         v: v!.toString(),
         r: "0x" + bigIntToUnpaddedBuffer(r!).toString("hex"),
         s: "0x" + bigIntToUnpaddedBuffer(s!).toString("hex"),
@@ -156,17 +120,7 @@ describe("rollUpgradable", async function () {
     {
       let { v, r, s } = signedTx3
       const rollUpTx3 = {
-        from: signedTx3.getSenderAddress().toString(),
-        txType: 2,
-        chainId: 1,
-        nonce: 2,
-        maxPriorityFeePerGas: 1,
-        maxFeePerGas: 255,
-        gasLimit: 40000000,
-        to: "0xcccccccccccccccccccccccccccccccccccccccc",
-        value: 100000,
-        data: "0x1a8451e600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        accessList: [],
+        rlpTxHash:"0x"+signedTx3.hash().toString('hex'),
         v: v!.toString(),
         r: "0x" + bigIntToUnpaddedBuffer(r!).toString("hex"),
         s: "0x" + bigIntToUnpaddedBuffer(s!).toString("hex"),
@@ -178,3 +132,8 @@ describe("rollUpgradable", async function () {
     const res = await rollUpgradable.verifyTxSet([t1, t2, t3])
   })
 })
+
+
+
+
+
