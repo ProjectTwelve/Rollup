@@ -35,6 +35,8 @@ contract RollUpgradable is
         continue;
       }
       address from = _verifyTx(hashTx, v, r, s);
+      if(from == address(0)) revert CommonError.FailedVerifyTx();
+  
       _syncTx(from, hashTx);
     }
 
