@@ -13,12 +13,4 @@ library CommonError {
     error ArrayCanNotEmpty();
     // failed to verify the original transaction from the sidechain
     error FailedVerifyTx();
-    // the data of the transaction is not from the expected sidechain
-    error chainIdNotMatch();
-    // item's length is not correct
-    error ItemLenError();
-    // Iterator has not next element
-    error IteratorNoMoreElement();
-    // item is not a list
-    error ItemNotList();
 }
