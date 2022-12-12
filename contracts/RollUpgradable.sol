@@ -6,8 +6,7 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "./RollUpStorage.sol";
 import "./interfaces/IRollUpgradable.sol";
 import "./access/SafeOwnableUpgradeable.sol";
-
-
+import "./libraries/RLPReader.sol";
 
 contract RollUpgradable is
   RollUpStorage,
@@ -15,7 +14,9 @@ contract RollUpgradable is
   SafeOwnableUpgradeable,
   UUPSUpgradeable
 {
-  
+  using RLPReader for RLPReader.RLPItem;
+  using RLPReader for bytes;
+
   /**
    * @dev verify tx set
    * @param txs pending transaction
@@ -23,21 +24,21 @@ contract RollUpgradable is
   function verifyTxSet(
     Tx[] calldata txs
   ) external virtual override returns (bool) {
-    bytes32 hashTx;
+    uint chainId;
     uint8 v;
     bytes32 r;
     bytes32 s;
-
-    for (uint256 i = 0; i < txs.length; i++) {
+    bytes32 rlpTxHash;
+    uint len = txs.length;
+    for (uint256 i = 0; i < len; i++) {
       Tx calldata t = txs[i];
-      (hashTx, v, r, s) = _decodeTx(t);
-      if (_verified[hashTx] != address(0)) {
+      (rlpTxHash, chainId, v, r, s) = _decodeTx(t);
+      if (_verified[rlpTxHash] != address(0)) {
         continue;
       }
-      address from = _verifyTx(hashTx, v, r, s);
-      if(from == address(0)) revert CommonError.FailedVerifyTx();
-  
-      _syncTx(from, hashTx);
+      address from = _verifyTx(rlpTxHash, chainId, v, r, s);
+
+      _syncTx(from, rlpTxHash);
     }
 
     return true;
@@ -46,8 +47,8 @@ contract RollUpgradable is
   /**
    * @dev initialize contract
    */
-  function initialize(address owner_) public initializer {
-
+  function initialize(address owner_, uint256 chainId_) public initializer {
+    _chainId = chainId_;
     __Ownable_init_unchained(owner_);
   }
 
@@ -56,11 +57,12 @@ contract RollUpgradable is
    */
   function _verifyTx(
     bytes32 dataHash,
+    uint256 chainId,
     uint8 v,
     bytes32 r,
     bytes32 s
-  ) internal pure returns (address signer) {
-    
+  ) internal view returns (address signer) {
+    if (chainId != _chainId) revert CommonError.SidechainIdNotMatch();
     // ecrecover
     uint8 _v = v == 1 || v == 0 ? 27 + v : v;
     signer = ECDSA.recover(dataHash, _v, r, s);
@@ -83,13 +85,15 @@ contract RollUpgradable is
 
   function _decodeTx(
     Tx calldata t
-  ) internal pure returns (bytes32, uint8, bytes32, bytes32) {
-    bytes32 txHash = t.rlpTxHash;
+  ) internal pure returns (bytes32, uint256, uint8, bytes32, bytes32) {
+    bytes memory rlpTx = t.rlpTx[1:];
+    RLPReader.RLPItem[] memory ls = rlpTx.toRlpItem().toList();
+    uint256 chainId = ls[0].toUint();
     uint8 v = t.v;
     bytes32 r = t.r;
     bytes32 s = t.s;
-
-    return (txHash, v, r, s);
+    bytes32 rlpTxHash = keccak256(t.rlpTx);
+    return (rlpTxHash, chainId, v, r, s);
   }
 }
 
