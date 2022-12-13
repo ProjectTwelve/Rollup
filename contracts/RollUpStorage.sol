@@ -15,7 +15,7 @@ contract RollUpStorage {
     bytes32 s;
   }
 
-  uint256[49] private __gap;
+  uint256[48] private __gap;
 }
 
 
