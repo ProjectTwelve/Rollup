@@ -30,7 +30,7 @@ contract RollUpgradable is
     bytes32 s;
     bytes32 rlpTxHash;
     uint len = txs.length;
-    for (uint256 i = 0; i < len; i++) {
+    for (uint i = 0; i < len; i++) {
       Tx calldata t = txs[i];
       (rlpTxHash, chainId, v, r, s) = _decodeTx(t);
       if (_verified[rlpTxHash] != address(0)) {
@@ -87,13 +87,9 @@ contract RollUpgradable is
     Tx calldata t
   ) internal pure returns (bytes32, uint256, uint8, bytes32, bytes32) {
     bytes memory rlpTx = t.rlpTx[1:];
-    RLPReader.RLPItem[] memory ls = rlpTx.toRlpItem().toList();
-    uint256 chainId = ls[0].toUint();
-    uint8 v = t.v;
-    bytes32 r = t.r;
-    bytes32 s = t.s;
-    bytes32 rlpTxHash = keccak256(t.rlpTx);
-    return (rlpTxHash, chainId, v, r, s);
+    return (keccak256(t.rlpTx), RLPReader.getChainId(rlpTx), t.v, t.r, t.s);
   }
+
+  
 }
 

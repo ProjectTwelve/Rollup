@@ -19,32 +19,32 @@ describe("rollUpgradable", async function () {
     rollUpgradable.initialize(accounts[0].address,1)
   })
 
-  it("Should verify single tx success", async () => {
-    const txData = {
-      type: "0x02",
-      chainId: "0x01",
-      nonce: "0x00",
-      maxPriorityFeePerGas: "0x01",
-      maxFeePerGas: "0xff",
-      gasLimit: "0x02625a00",
-      to: "0xcccccccccccccccccccccccccccccccccccccccc",
-      value: "0x0186a0",
-      data: "0x1a8451e600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-      accessList: [],
-    }
+  // it("Should verify single tx success", async () => {
+  //   const txData = {
+  //     type: "0x02",
+  //     chainId: "0x01",
+  //     nonce: "0x00",
+  //     maxPriorityFeePerGas: "0x01",
+  //     maxFeePerGas: "0xff",
+  //     gasLimit: "0x02625a00",
+  //     to: "0xcccccccccccccccccccccccccccccccccccccccc",
+  //     value: "0x0186a0",
+  //     data: "0x1a8451e600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+  //     accessList: [],
+  //   }
 
-    const tx = FeeMarketEIP1559Transaction.fromTxData(txData, { common })
-    const signedTx = tx.sign(privateKey_)
+  //   const tx = FeeMarketEIP1559Transaction.fromTxData(txData, { common })
+  //   const signedTx = tx.sign(privateKey_)
     
-    let { v, r, s } = signedTx
-    const rollUpTx ={
-      rlpTx:"0x"+signedTx.getMessageToSign(false).toString('hex'),
-      v: v!.toString(),
-      r: "0x" + bigIntToUnpaddedBuffer(r!).toString("hex"),
-      s: "0x" + bigIntToUnpaddedBuffer(s!).toString("hex"),
-    }
-    const res = await rollUpgradable.verifyTxSet([rollUpTx]);
-  })
+  //   let { v, r, s } = signedTx
+  //   const rollUpTx ={
+  //     rlpTx:"0x"+signedTx.getMessageToSign(false).toString('hex'),
+  //     v: v!.toString(),
+  //     r: "0x" + bigIntToUnpaddedBuffer(r!).toString("hex"),
+  //     s: "0x" + bigIntToUnpaddedBuffer(s!).toString("hex"),
+  //   }
+  //   const res = await rollUpgradable.verifyTxSet([rollUpTx]);
+  // })
 
   it("Should verify tx set success", async () => {
     const txData1 = {

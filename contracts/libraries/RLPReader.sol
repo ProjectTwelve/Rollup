@@ -359,4 +359,14 @@ library RLPReader {
       }
     }
   }
+
+  function getChainId(bytes memory item) internal pure returns (uint){
+    RLPItem memory _item = toRlpItem(item);
+    uint memPtr = _item.memPtr + _payloadOffset(_item.memPtr);
+    uint dataLen;
+    RLPItem memory chainId;
+    dataLen = _itemLength(memPtr);
+    chainId = RLPItem(dataLen, memPtr);
+    return toUint(chainId);
+  }
 }
