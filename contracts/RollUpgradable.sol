@@ -17,6 +17,8 @@ contract RollUpgradable is
   using RLPReader for RLPReader.RLPItem;
   using RLPReader for bytes;
 
+  
+
   /**
    * @dev verify tx set
    * @param txs pending transaction
@@ -53,6 +55,21 @@ contract RollUpgradable is
   }
 
   /**
+   * @dev get side chain id
+   */
+  function getChainId()public virtual override view returns(uint){
+    return _chainId;
+  }
+
+  /**
+   * @dev check if the transaction has been verified,is so return (ture,singer) otherwise return (false,0x00)
+   */
+  function isVerified(bytes32 hash)public  virtual override view returns(bool,address){
+    return (_verified[hash] != address(0),_verified[hash]);
+  }
+
+   
+  /**
    * @dev verify tx from side chain
    */
   function _verifyTx(
@@ -86,10 +103,15 @@ contract RollUpgradable is
   function _decodeTx(
     Tx calldata t
   ) internal pure returns (bytes32, uint256, uint8, bytes32, bytes32) {
-    bytes memory rlpTx = t.rlpTx[1:];
-    return (keccak256(t.rlpTx), RLPReader.getChainId(rlpTx), t.v, t.r, t.s);
+    bytes memory rlpTx = t.rlpTx;
+    RLPReader.RLPItem memory raw = rlpTx.toRlpItem();
+    if(RLPReader.isList(raw)){
+      RLPReader.RLPItem[] memory ls = raw.toList();
+      return (keccak256(t.rlpTx), ls[6].toUint(), t.v, t.r, t.s);
+    }else{
+      return (keccak256(t.rlpTx), RLPReader.getChainId(t.rlpTx[1:]), t.v, t.r, t.s);
+    }
   }
-
-  
+ 
 }
 
