@@ -42,14 +42,15 @@ const config: HardhatUserConfig = {
             chainId: 44102,
             deploy: ["deploy/hardhat"],
         },
-        // bnbTest: {
-        //     //url: process.env.BNB_CHAIN_TEST_URL,
-        //     accounts: accounts,
-        //     gas: "auto",
-        //     gasPrice: "auto",
-        //     deploy: ["deploy/bnbTest"],
-        //     tags: ["test"],
-        // },
+        bnbTest: {
+            url: process.env.BNB_CHAIN_TEST_URL,
+            chainId:97,
+            accounts: accounts,
+            gas: "auto",
+            gasPrice: "auto",
+            deploy: ["deploy/bnbTest"],
+            tags: ["test"],
+        },
     },
     gasReporter: {
         enabled: false,
@@ -57,7 +58,6 @@ const config: HardhatUserConfig = {
     namedAccounts: {
         deployer: {
             default: 0,
-            p12TestNet: addresses[0],
             bnbTest: addresses[0],
         },
     },

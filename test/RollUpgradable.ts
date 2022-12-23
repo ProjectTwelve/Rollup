@@ -1,7 +1,7 @@
 import { expect } from "chai"
 import { Chain, Common, Hardfork } from "@ethereumjs/common"
 import { ethers } from "hardhat"
-import { bigIntToUnpaddedBuffer, bufArrToArr } from "@ethereumjs/util"
+import { Address, bigIntToUnpaddedBuffer, bufArrToArr } from "@ethereumjs/util"
 import { AccessListEIP2930Transaction, AccessListEIP2930TxData, FeeMarketEIP1559Transaction, Transaction, TransactionFactory } from "@ethereumjs/tx"
 import { RollUpgradable } from "../typechain-types/contracts/RollUpgradable"
 import { randomBytes } from "crypto"
@@ -48,6 +48,7 @@ describe("rollUpgradable", async function () {
     const tx = Transaction.fromTxData(txData, { common })
     const signedTx = tx.sign(privateKey_)
     let { v, r, s } = signedTx
+    const singer = Address.fromPublicKey(signedTx.getSenderPublicKey()).toString()
     const recovery = calculateSigRecovery(v!, common.chainId())
     if(isValidSigRecovery(recovery)){
       const rollUpTx ={
@@ -55,6 +56,7 @@ describe("rollUpgradable", async function () {
         v: recovery,
         r: "0x" + bigIntToUnpaddedBuffer(r!).toString("hex"),
         s: "0x" + bigIntToUnpaddedBuffer(s!).toString("hex"),
+        singer:singer,
       }
       await rollUpgradable.verifyTxSet([rollUpTx]);
     }else{
@@ -88,16 +90,17 @@ describe("rollUpgradable", async function () {
     const tx = AccessListEIP2930Transaction.fromTxData(txData, { common })
     const signedTx = tx.sign(privateKey_)
     let { v, r, s } = signedTx        
-   
+    const singer = Address.fromPublicKey(signedTx.getSenderPublicKey()).toString()
     const rollUpTx ={
       rlpTx:"0x"+tx.getMessageToSign(false).toString('hex'),
       v: v!.toString(),
       r: "0x" + bigIntToUnpaddedBuffer(r!).toString("hex"),
       s: "0x" + bigIntToUnpaddedBuffer(s!).toString("hex"),
+      singer:singer
     }
     await rollUpgradable.verifyTxSet([rollUpTx]);
   })
-  // FeeMarketEIP1559Tx
+  // // FeeMarketEIP1559Tx
   it("Should verify FeeMarketEIP1559Tx success", async () => {
     const common = new Common({ chain: Chain.Rinkeby, hardfork: Hardfork.London })
     const txData = {
@@ -115,12 +118,14 @@ describe("rollUpgradable", async function () {
 
     const tx = FeeMarketEIP1559Transaction.fromTxData(txData, { common })
     const signedTx = tx.sign(privateKey_)
+    const singer = Address.fromPublicKey(signedTx.getSenderPublicKey()).toString()
     let { v, r, s } = signedTx
     const rollUpTx ={
       rlpTx:"0x"+tx.getMessageToSign(false).toString('hex'),
       v: v!.toString(),
       r: "0x" + bigIntToUnpaddedBuffer(r!).toString("hex"),
       s: "0x" + bigIntToUnpaddedBuffer(s!).toString("hex"),
+      singer:singer
     }
     await rollUpgradable.verifyTxSet([rollUpTx]);
   })
