@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import { exit } from 'process';
 
 // If the contract does not require verification, just add it here
-const whiteList = [""];
+const whiteList = [''];
 
 function getNoVerifyFile() {
   const files: string[] = [];

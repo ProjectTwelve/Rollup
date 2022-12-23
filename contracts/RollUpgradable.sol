@@ -1,32 +1,24 @@
 // SPDX-License-Identifier: GPL-3.0-only
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "./RollUpStorage.sol";
-import "./interfaces/IRollUpgradable.sol";
-import "./access/SafeOwnableUpgradeable.sol";
-import "./libraries/RLPReader.sol";
+import '@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol';
+import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
+import './RollUpStorage.sol';
+import './interfaces/IRollUpgradable.sol';
+import './access/SafeOwnableUpgradeable.sol';
+import './libraries/RLPReader.sol';
 import './libraries/CommonError.sol';
 
-contract RollUpgradable is
-  RollUpStorage,
-  IRollUpgradable,
-  SafeOwnableUpgradeable,
-  UUPSUpgradeable
-{
+
+contract RollUpgradable is RollUpStorage, IRollUpgradable, SafeOwnableUpgradeable, UUPSUpgradeable {
   using RLPReader for RLPReader.RLPItem;
   using RLPReader for bytes;
-
-  
 
   /**
    * @dev verify tx set
    * @param txs pending transaction
    */
-  function verifyTxSet(
-    Tx[] calldata txs
-  ) external virtual override returns (bool) {
+  function verifyTxSet(Tx[] calldata txs) external virtual override returns (bool) {
     uint chainId;
     uint8 v;
     bytes32 r;
@@ -36,11 +28,11 @@ contract RollUpgradable is
     address singer;
     for (uint i = 0; i < len; i++) {
       Tx calldata t = txs[i];
-      (rlpTxHash, chainId, v, r, s,singer) = _decodeTx(t);
+      (rlpTxHash, chainId, v, r, s, singer) = _decodeTx(t);
       if (_verified[rlpTxHash] != address(0)) {
         continue;
       }
-      if(_verifyTx(rlpTxHash, chainId, v, r, s,singer)){
+      if (_verifyTx(rlpTxHash, chainId, v, r, s, singer)) {
         _syncTx(singer, rlpTxHash);
       }
     }
@@ -59,18 +51,17 @@ contract RollUpgradable is
   /**
    * @dev get side chain id
    */
-  function getChainId()public virtual override view returns(uint){
+  function getChainId() public view virtual override returns (uint) {
     return _chainId;
   }
 
   /**
-   * @dev check if the transaction has been verified,is so return (ture,singer) otherwise return (false,0x00)
+   * @dev check if the transaction has been verified,is so return (true,singer) otherwise return (false,0x00)
    */
-  function isVerified(bytes32 hash)public  virtual override view returns(bool,address){
-    return (_verified[hash] != address(0),_verified[hash]);
+  function isVerified(bytes32 hash) public view virtual override returns (bool, address) {
+    return (_verified[hash] != address(0), _verified[hash]);
   }
 
-   
   /**
    * @dev verify tx from side chain
    */
@@ -85,7 +76,7 @@ contract RollUpgradable is
     if (chainId != _chainId) revert CommonError.SidechainIdNotMatch();
     // ecrecover
     uint8 _v = v == 1 || v == 0 ? 27 + v : v;
-    if(singer != ECDSA.recover(dataHash, _v, r, s)) revert CommonError.FailedVerifyTx();
+    if (singer != ECDSA.recover(dataHash, _v, r, s)) revert CommonError.FailedVerifyTx();
     return true;
   }
 
@@ -100,22 +91,16 @@ contract RollUpgradable is
   /**
    * @dev upgrade function
    */
-  function _authorizeUpgrade(
-    address newImplementation
-  ) internal override onlyOwner {}
+  function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
-  function _decodeTx(
-    Tx calldata t
-  ) internal pure returns (bytes32, uint256, uint8, bytes32, bytes32,address) {
+  function _decodeTx(Tx calldata t) internal pure returns (bytes32, uint256, uint8, bytes32, bytes32, address) {
     bytes memory rlpTx = t.rlpTx;
     RLPReader.RLPItem memory raw = rlpTx.toRlpItem();
-    if(RLPReader.isList(raw)){
+    if (RLPReader.isList(raw)) {
       RLPReader.RLPItem[] memory ls = raw.toList();
-      return (keccak256(t.rlpTx), ls[6].toUint(), t.v, t.r, t.s,t.singer);
-    }else{
-      return (keccak256(t.rlpTx), RLPReader.getChainId(t.rlpTx[1:]), t.v, t.r, t.s,t.singer);
+      return (keccak256(t.rlpTx), ls[6].toUint(), t.v, t.r, t.s, t.singer);
+    } else {
+      return (keccak256(t.rlpTx), RLPReader.getChainId(t.rlpTx[1:]), t.v, t.r, t.s, t.singer);
     }
   }
- 
 }
-

@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.17;
 
-import "./CommonError.sol";
+import './CommonError.sol';
 
 library RLPReader {
   uint8 constant STRING_SHORT_START = 0x80;
@@ -63,16 +63,14 @@ library RLPReader {
    * @param self The RLP item.
    * @return An 'Iterator' over the item.
    */
-  function iterator(
-    RLPItem memory self
-  ) internal pure returns (Iterator memory) {
+  function iterator(RLPItem memory self) internal pure returns (Iterator memory) {
     if (!isList(self)) revert CommonError.ItemNotList();
 
     uint ptr = self.memPtr + _payloadOffset(self.memPtr);
     return Iterator(self, ptr);
   }
 
-  /** 
+  /**
    * @param item the RLP item.
    */
   function rlpLen(RLPItem memory item) internal pure returns (uint) {
@@ -83,9 +81,7 @@ library RLPReader {
    * @param item the RLP item.
    * @return (memPtr, len) pair: location of the item's payload in memory.
    */
-  function payloadLocation(
-    RLPItem memory item
-  ) internal pure returns (uint, uint) {
+  function payloadLocation(RLPItem memory item) internal pure returns (uint, uint) {
     uint offset = _payloadOffset(item.memPtr);
     uint memPtr = item.memPtr + offset;
     uint len = item.len - offset; // data length
@@ -103,9 +99,7 @@ library RLPReader {
   /**
    * @param item the RLP item containing the encoded list.
    */
-  function toList(
-    RLPItem memory item
-  ) internal pure returns (RLPItem[] memory) {
+  function toList(RLPItem memory item) internal pure returns (RLPItem[] memory) {
     if (!isList(item)) revert CommonError.ItemNotList();
 
     uint items = numItems(item);
@@ -140,9 +134,7 @@ library RLPReader {
    * @dev A cheaper version of keccak256(toRlpBytes(item)) that avoids copying memory.
    * @return keccak256 hash of RLP encoded bytes.
    */
-  function rlpBytesKeccak256(
-    RLPItem memory item
-  ) internal pure returns (bytes32) {
+  function rlpBytesKeccak256(RLPItem memory item) internal pure returns (bytes32) {
     uint256 ptr = item.memPtr;
     uint256 len = item.len;
     bytes32 result;
@@ -156,9 +148,7 @@ library RLPReader {
    * @dev A cheaper version of keccak256(toBytes(item)) that avoids copying memory.
    * @return keccak256 hash of the item payload.
    */
-  function payloadKeccak256(
-    RLPItem memory item
-  ) internal pure returns (bytes32) {
+  function payloadKeccak256(RLPItem memory item) internal pure returns (bytes32) {
     (uint memPtr, uint len) = payloadLocation(item);
     bytes32 result;
     assembly {
@@ -170,9 +160,7 @@ library RLPReader {
   /** RLPItem conversions into data types **/
 
   // @returns raw rlp encoding in bytes
-  function toRlpBytes(
-    RLPItem memory item
-  ) internal pure returns (bytes memory) {
+  function toRlpBytes(RLPItem memory item) internal pure returns (bytes memory) {
     bytes memory result = new bytes(item.len);
     if (result.length == 0) return result;
 
@@ -287,8 +275,7 @@ library RLPReader {
     }
 
     if (byte0 < STRING_SHORT_START) itemLen = 1;
-    else if (byte0 < STRING_LONG_START)
-      itemLen = byte0 - STRING_SHORT_START + 1;
+    else if (byte0 < STRING_LONG_START) itemLen = byte0 - STRING_SHORT_START + 1;
     else if (byte0 < LIST_SHORT_START) {
       assembly {
         let byteLen := sub(byte0, 0xb7) // # of bytes the actual length is
@@ -321,17 +308,14 @@ library RLPReader {
     }
 
     if (byte0 < STRING_SHORT_START) return 0;
-    else if (
-      byte0 < STRING_LONG_START ||
-      (byte0 >= LIST_SHORT_START && byte0 < LIST_LONG_START)
-    ) return 1;
+    else if (byte0 < STRING_LONG_START || (byte0 >= LIST_SHORT_START && byte0 < LIST_LONG_START)) return 1;
     else if (byte0 < LIST_SHORT_START)
       // being explicit
       return byte0 - (STRING_LONG_START - 1) + 1;
     else return byte0 - (LIST_LONG_START - 1) + 1;
   }
 
-  /** 
+  /**
    * @param src Pointer to source
    * @param dest Pointer to destination
    * @param len Amount of memory to copy from the source
@@ -360,7 +344,7 @@ library RLPReader {
     }
   }
 
-  function getChainId(bytes memory item) internal pure returns (uint){
+  function getChainId(bytes memory item) internal pure returns (uint) {
     RLPItem memory _item = toRlpItem(item);
     uint memPtr = _item.memPtr + _payloadOffset(_item.memPtr);
     uint dataLen;
