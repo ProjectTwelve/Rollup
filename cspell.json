@@ -1,0 +1,26 @@
+{
+  "words": [
+    "ADDESSSES",
+    "curr",
+    "dedup",
+    "destpart",
+    "Hardfork",
+    "Initializable",
+    "keccak",
+    "mload",
+    "mstore",
+    "neccesary",
+    "nomicfoundation",
+    "shfit",
+    "sidechain",
+    "solhint",
+    "srcpart",
+    "sstore",
+    "struct",
+    "tsort",
+    "typechain",
+    "Unpadded",
+    "UUPS"
+  ],
+  "ignorePaths": ["typechain-types/**", "flatten/**"]
+}

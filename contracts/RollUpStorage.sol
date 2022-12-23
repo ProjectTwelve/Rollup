@@ -5,7 +5,6 @@ contract RollUpStorage {
   // sidechain id
   uint256 internal _chainId;
 
-
   // verified transaction
   mapping(bytes32 => address) internal _verified;
   struct Tx {
@@ -16,8 +15,5 @@ contract RollUpStorage {
     address singer;
   }
 
-  
-  uint256[48] private __gap;
+  uint256[49] private __gap;
 }
-
-

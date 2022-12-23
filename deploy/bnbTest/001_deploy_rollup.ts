@@ -5,8 +5,8 @@ const func: DeployFunction = async function ({ deployments, getNamedAccounts }) 
   const { deployer } = await getNamedAccounts();
 
   const owner = deployer;
-  // TODO if sidechain is ready modify chainId to correct
-  const chainId = 1
+
+  const chainId = 20736;
 
   // Be carefully: Check whether proxy contract is initialized successfully
   await deploy('RollUpgradable', {
@@ -18,7 +18,7 @@ const func: DeployFunction = async function ({ deployments, getNamedAccounts }) 
       execute: {
         init: {
           methodName: 'initialize',
-          args: [owner,chainId],
+          args: [owner, chainId],
         },
       },
     },
