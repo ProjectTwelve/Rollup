@@ -23,4 +23,6 @@ library CommonError {
   error ItemNotList();
   // sidechain id mot match
   error SidechainIdNotMatch();
+  // transaction already exists
+  error TxAleadyExists(bytes32 hash, address singer);
 }

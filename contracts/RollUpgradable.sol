@@ -29,9 +29,8 @@ contract RollUpgradable is RollUpStorage, IRollUpgradable, SafeOwnableUpgradeabl
     for (uint i = 0; i < len; i++) {
       Tx calldata t = txs[i];
       (rlpTxHash, chainId, v, r, s, singer) = _decodeTx(t);
-      if (_verified[rlpTxHash] != address(0)) {
-        continue;
-      }
+      if (_verified[rlpTxHash] != address(0)) revert CommonError.TxAleadyExists(rlpTxHash,_verified[rlpTxHash]);
+        
       if (_verifyTx(rlpTxHash, chainId, v, r, s, singer)) {
         _syncTx(singer, rlpTxHash);
       }
@@ -76,6 +75,8 @@ contract RollUpgradable is RollUpStorage, IRollUpgradable, SafeOwnableUpgradeabl
     if (chainId != _chainId) revert CommonError.SidechainIdNotMatch();
     // ecrecover
     uint8 _v = v == 1 || v == 0 ? 27 + v : v;
+    
+    
     if (singer != ECDSA.recover(dataHash, _v, r, s)) revert CommonError.FailedVerifyTx();
     return true;
   }
@@ -103,4 +104,5 @@ contract RollUpgradable is RollUpStorage, IRollUpgradable, SafeOwnableUpgradeabl
       return (keccak256(t.rlpTx), RLPReader.getChainId(t.rlpTx[1:]), t.v, t.r, t.s, t.singer);
     }
   }
+
 }
