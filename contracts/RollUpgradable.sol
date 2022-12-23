@@ -7,6 +7,7 @@ import "./RollUpStorage.sol";
 import "./interfaces/IRollUpgradable.sol";
 import "./access/SafeOwnableUpgradeable.sol";
 import "./libraries/RLPReader.sol";
+import './libraries/CommonError.sol';
 
 contract RollUpgradable is
   RollUpStorage,
@@ -32,15 +33,16 @@ contract RollUpgradable is
     bytes32 s;
     bytes32 rlpTxHash;
     uint len = txs.length;
+    address singer;
     for (uint i = 0; i < len; i++) {
       Tx calldata t = txs[i];
-      (rlpTxHash, chainId, v, r, s) = _decodeTx(t);
+      (rlpTxHash, chainId, v, r, s,singer) = _decodeTx(t);
       if (_verified[rlpTxHash] != address(0)) {
         continue;
       }
-      address from = _verifyTx(rlpTxHash, chainId, v, r, s);
-
-      _syncTx(from, rlpTxHash);
+      if(_verifyTx(rlpTxHash, chainId, v, r, s,singer)){
+        _syncTx(singer, rlpTxHash);
+      }
     }
 
     return true;
@@ -77,12 +79,14 @@ contract RollUpgradable is
     uint256 chainId,
     uint8 v,
     bytes32 r,
-    bytes32 s
-  ) internal view returns (address signer) {
+    bytes32 s,
+    address singer
+  ) internal view returns (bool) {
     if (chainId != _chainId) revert CommonError.SidechainIdNotMatch();
     // ecrecover
     uint8 _v = v == 1 || v == 0 ? 27 + v : v;
-    signer = ECDSA.recover(dataHash, _v, r, s);
+    if(singer != ECDSA.recover(dataHash, _v, r, s)) revert CommonError.FailedVerifyTx();
+    return true;
   }
 
   /**
@@ -102,14 +106,14 @@ contract RollUpgradable is
 
   function _decodeTx(
     Tx calldata t
-  ) internal pure returns (bytes32, uint256, uint8, bytes32, bytes32) {
+  ) internal pure returns (bytes32, uint256, uint8, bytes32, bytes32,address) {
     bytes memory rlpTx = t.rlpTx;
     RLPReader.RLPItem memory raw = rlpTx.toRlpItem();
     if(RLPReader.isList(raw)){
       RLPReader.RLPItem[] memory ls = raw.toList();
-      return (keccak256(t.rlpTx), ls[6].toUint(), t.v, t.r, t.s);
+      return (keccak256(t.rlpTx), ls[6].toUint(), t.v, t.r, t.s,t.singer);
     }else{
-      return (keccak256(t.rlpTx), RLPReader.getChainId(t.rlpTx[1:]), t.v, t.r, t.s);
+      return (keccak256(t.rlpTx), RLPReader.getChainId(t.rlpTx[1:]), t.v, t.r, t.s,t.singer);
     }
   }
  

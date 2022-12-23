@@ -2,7 +2,8 @@
   "name": "rollup",
   "version": "1.0.0",
   "scripts": {
-    "test": "npx hardhat test"
+    "test": " hardhat test",
+    "deploy": "hardhat deploy"
   },
   "author": "",
   "devDependencies": {
