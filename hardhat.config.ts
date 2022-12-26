@@ -53,6 +53,7 @@ const config: HardhatUserConfig = {
     },
     bnbMain: {
       url: 'https://bsc-dataseed1.binance.org/',
+      chainId: 56,
       accounts,
       gas: 'auto',
       gasPrice: 'auto',
@@ -85,6 +86,7 @@ const config: HardhatUserConfig = {
   etherscan: {
     apiKey: {
       bscTestnet: process.env.BNBSCAN_API_KEY!,
+      bsc: process.env.BNBSCAN_API_KEY!,
     },
   },
 };

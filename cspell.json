@@ -1,6 +1,7 @@
 {
   "words": [
     "ADDESSSES",
+    "BNBSCAN",
     "curr",
     "dedup",
     "destpart",
@@ -22,5 +23,8 @@
     "Unpadded",
     "UUPS"
   ],
-  "ignorePaths": ["typechain-types/**", "flatten/**"]
+  "ignorePaths": [
+    "typechain-types/**",
+    "flatten/**"
+  ]
 }
