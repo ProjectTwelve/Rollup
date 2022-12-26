@@ -24,5 +24,5 @@ library CommonError {
   // sidechain id mot match
   error SidechainIdNotMatch();
   // transaction already exists
-  error TxAleadyExists(bytes32 hash, address singer);
+  error TxAlreadyExists(bytes32 hash, address singer);
 }

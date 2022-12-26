@@ -51,6 +51,14 @@ const config: HardhatUserConfig = {
       deploy: ['deploy/bnbTest'],
       tags: ['test'],
     },
+    bnbMain: {
+      url: 'https://bsc-dataseed1.binance.org/',
+      accounts,
+      gas: 'auto',
+      gasPrice: 'auto',
+      deploy: ['deploy/bnbMain'],
+      tags: ['production'],
+    },
   },
   gasReporter: {
     enabled: false,
@@ -59,6 +67,12 @@ const config: HardhatUserConfig = {
     deployer: {
       default: 0,
       bnbTest: addresses[0],
+      bnbMain: addresses[1],
+    },
+    owner: {
+      default: 0,
+      bnbTest: addresses[0],
+      bnbMain: addresses[1],
     },
   },
   external: {
@@ -76,3 +90,4 @@ const config: HardhatUserConfig = {
 };
 
 export default config;
+

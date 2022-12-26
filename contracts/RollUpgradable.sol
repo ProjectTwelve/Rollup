@@ -29,7 +29,7 @@ contract RollUpgradable is RollUpStorage, IRollUpgradable, SafeOwnableUpgradeabl
     for (uint i = 0; i < len; i++) {
       Tx calldata t = txs[i];
       (rlpTxHash, chainId, v, r, s, singer) = _decodeTx(t);
-      if (_verified[rlpTxHash] != address(0)) revert CommonError.TxAleadyExists(rlpTxHash,_verified[rlpTxHash]);
+      if (_verified[rlpTxHash] != address(0)) revert CommonError.TxAlreadyExists(rlpTxHash,_verified[rlpTxHash]);
         
       if (_verifyTx(rlpTxHash, chainId, v, r, s, singer)) {
         _syncTx(singer, rlpTxHash);
