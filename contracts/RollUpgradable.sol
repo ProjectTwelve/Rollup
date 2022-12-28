@@ -26,10 +26,12 @@ contract RollUpgradable is RollUpStorage, IRollUpgradable, SafeOwnableUpgradeabl
     bytes32 rlpTxHash;
     uint len = txs.length;
     address singer;
+    bytes32 _hash;
     for (uint i = 0; i < len; i++) {
       Tx calldata t = txs[i];
       (rlpTxHash, chainId, v, r, s, singer) = _decodeTx(t);
-      if (_verified[rlpTxHash] != address(0)) revert CommonError.TxAlreadyExists(rlpTxHash,_verified[rlpTxHash]);
+      _hash = keccak256(abi.encodePacked(singer,rlpTxHash));
+      if (_verified[_hash] == singer ) revert CommonError.TxAlreadyExists(rlpTxHash,_verified[rlpTxHash]);
         
       if (_verifyTx(rlpTxHash, chainId, v, r, s, singer)) {
         _syncTx(singer, rlpTxHash);
@@ -85,7 +87,8 @@ contract RollUpgradable is RollUpStorage, IRollUpgradable, SafeOwnableUpgradeabl
    * @dev sync tx from side chain
    */
   function _syncTx(address from, bytes32 dataHash) internal {
-    _verified[dataHash] = from;
+    bytes32 _hash = keccak256(abi.encodePacked(from,dataHash));
+    _verified[_hash] = from;
     emit SyncTx(dataHash);
   }
 
