@@ -68,12 +68,12 @@ const config: HardhatUserConfig = {
     deployer: {
       default: 0,
       bnbTest: addresses[0],
-      bnbMain: addresses[1],
+      bnbMain: addresses[0],
     },
     owner: {
       default: 0,
       bnbTest: addresses[0],
-      bnbMain: addresses[1],
+      bnbMain: addresses[0],
     },
   },
   external: {
@@ -92,4 +92,3 @@ const config: HardhatUserConfig = {
 };
 
 export default config;
-

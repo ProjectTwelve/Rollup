@@ -5,6 +5,8 @@ import { AccessListEIP2930Transaction, FeeMarketEIP1559Transaction, Transaction 
 import { RollUpgradable } from '../typechain-types/contracts/RollUpgradable';
 import { randomBytes } from 'crypto';
 import { RLP } from 'ethers/lib/utils';
+import { expect } from 'chai';
+import { BigNumber } from 'ethers';
 
 const privateKey_ = randomBytes(32);
 
@@ -127,86 +129,21 @@ describe('rollUpgradable', async function () {
     await rollUpgradable.verifyTxSet([rollUpTx]);
   });
 
-  // it("Should verify tx set success", async () => {
-  //   const txData1 = {
-  //     type: "0x02",
-  //     chainId: "0x01",
-  //     nonce: "0x00",
-  //     maxPriorityFeePerGas: "0x01",
-  //     maxFeePerGas: "0xff",
-  //     gasLimit: "0x02625a00",
-  //     to: "0xcccccccccccccccccccccccccccccccccccccccc",
-  //     value: "0x0186a0",
-  //     data: "0x1a8451e600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-  //     accessList: [],
-  //   }
-  //   const txData2 = {
-  //     type: "0x02",
-  //     chainId: "0x01",
-  //     nonce: "0x01",
-  //     maxPriorityFeePerGas: "0x01",
-  //     maxFeePerGas: "0xff",
-  //     gasLimit: "0x02625a00",
-  //     to: "0xcccccccccccccccccccccccccccccccccccccccc",
-  //     value: "0x0186a0",
-  //     data: "0x1a8451e600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-  //     accessList: [],
-  //   }
-  //   const txData3 = {
-  //     type: "0x02",
-  //     chainId: "0x01",
-  //     nonce: "0x02",
-  //     maxPriorityFeePerGas: "0x01",
-  //     maxFeePerGas: "0xff",
-  //     gasLimit: "0x02625a00",
-  //     to: "0xcccccccccccccccccccccccccccccccccccccccc",
-  //     value: "0x0186a0",
-  //     data: "0x1a8451e600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-  //     accessList: [],
-  //   }
+  it('Should publish a transaction successfully', async () => {
+    const txHash = BigNumber.from(ethers.utils.randomBytes(32)).toHexString();
 
-  //   const tx1 = FeeMarketEIP1559Transaction.fromTxData(txData1, { common })
-  //   const signedTx1 = tx1.sign(privateKey_)
+    expect(await rollUpgradable.isTxPublished(txHash)).to.be.eq(false);
 
-  //   const tx2 = FeeMarketEIP1559Transaction.fromTxData(txData2, { common })
-  //   const signedTx2 = tx2.sign(privateKey_)
+    await expect(rollUpgradable.publishTx(txHash)).to.be.emit(rollUpgradable, 'PublishTx').withArgs(txHash);
 
-  //   const tx3 = FeeMarketEIP1559Transaction.fromTxData(txData3, { common })
-  //   const signedTx3 = tx3.sign(privateKey_)
+    expect(await rollUpgradable.isTxPublished(txHash)).to.be.eq(true);
+  });
 
-  //   let t1, t2, t3
-  //   {
-  //     let { v, r, s } = signedTx1
-  //     const rollUpTx1 = {
-  //       rlpTx:"0x"+signedTx1.getMessageToSign(false).toString('hex'),
-  //       v: v!.toString(),
-  //       r: "0x" + bigIntToUnpaddedBuffer(r!).toString("hex"),
-  //       s: "0x" + bigIntToUnpaddedBuffer(s!).toString("hex"),
-  //     }
-  //     t1 = rollUpTx1
-  //   }
-  //   {
-  //     let { v, r, s } = signedTx2
-  //     const rollUpTx2 = {
-  //       rlpTx:"0x"+signedTx2.getMessageToSign(false).toString('hex'),
-  //       v: v!.toString(),
-  //       r: "0x" + bigIntToUnpaddedBuffer(r!).toString("hex"),
-  //       s: "0x" + bigIntToUnpaddedBuffer(s!).toString("hex"),
-  //     }
-  //     t2 = rollUpTx2
-  //   }
-  //   {
-  //     let { v, r, s } = signedTx3
-  //     const rollUpTx3 = {
-  //       rlpTx:"0x"+signedTx3.getMessageToSign(false).toString('hex'),
-  //       v: v!.toString(),
-  //       r: "0x" + bigIntToUnpaddedBuffer(r!).toString("hex"),
-  //       s: "0x" + bigIntToUnpaddedBuffer(s!).toString("hex"),
-  //     }
+  it('Should publish a existed transaction fail', async () => {
+    const txHash = BigNumber.from(ethers.utils.randomBytes(32)).toHexString();
 
-  //     t3 = rollUpTx3
-  //   }
+    await expect(rollUpgradable.publishTx(txHash)).to.be.emit(rollUpgradable, 'PublishTx').withArgs(txHash);
 
-  //   const res = await rollUpgradable.verifyTxSet([t1,t2,t3])
-  // })
+    await expect(rollUpgradable.publishTx(txHash)).to.be.revertedWithCustomError(rollUpgradable, 'TxAlreadyPublished');
+  });
 });
