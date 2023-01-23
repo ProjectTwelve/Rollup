@@ -40,6 +40,14 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       chainId: 44102,
+      // temporary fork url
+      accounts: accounts.map((a) => {
+        return { privateKey: a, balance: '100000000000000000000000000000000000' };
+      }),
+      forking: {
+        url: process.env.BNB_CHAIN_TEST_URL!,
+        blockNumber: 26503965,
+      },
       deploy: ['deploy/hardhat'],
     },
     bnbTest: {
