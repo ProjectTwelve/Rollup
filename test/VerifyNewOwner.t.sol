@@ -39,4 +39,16 @@ contract VerifyNewOwner is Test {
 
     assertEq(oldOwner, newOwner);
   }
+
+  function testUpgradeToNewSuccess() public {
+    vm.rollFork(25174632);
+    _newImplementation = RollUpgradable(0xba7F98483CB6470e5671be33f8C2AE7d311347Bd);
+
+    address oldOwner = RollUpgradable(address(_proxy)).owner();
+    vm.prank(oldOwner);
+    _proxy.upgradeTo(address(_newImplementation));
+
+    address newOwner = RollUpgradable(address(_proxy)).owner();
+    assertEq(oldOwner, newOwner);
+  }
 }

@@ -21,7 +21,9 @@ task('accounts', 'Prints the list of accounts', async (taskArgs, hre) => {
 // Go to https://hardhat.org/config/ to learn more
 
 const accounts = process.env.ACCOUNTS ? process.env.ACCOUNTS.split(',') : [];
-const addresses = process.env.ADDESSSES ? process.env.ADDESSSES.split(',') : [];
+// const addresses = process.env.ADDESSSES ? process.env.ADDESSSES.split(',') : [];
+const deployer = process.env.DEPLOYER!;
+const owner = process.env.OWNER!;
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -60,7 +62,7 @@ const config: HardhatUserConfig = {
       tags: ['test'],
     },
     bnbMain: {
-      url: 'https://bsc-dataseed1.binance.org/',
+      url: process.env.BNB_CHAIN_URL,
       chainId: 56,
       accounts,
       gas: 'auto',
@@ -75,13 +77,13 @@ const config: HardhatUserConfig = {
   namedAccounts: {
     deployer: {
       default: 0,
-      bnbTest: addresses[0],
-      bnbMain: addresses[0],
+      bnbTest: deployer,
+      bnbMain: deployer,
     },
     owner: {
       default: 0,
-      bnbTest: addresses[0],
-      bnbMain: addresses[0],
+      bnbTest: owner,
+      bnbMain: owner,
     },
   },
   external: {
