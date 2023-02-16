@@ -2,9 +2,7 @@
 
 # P12 Rollup
 
-The Rollup contract will verify the data on the chain, the data needs to come from pudge, and the signature restoration is equal to the expected signature address, then the chain is successful 
-
-
+The Rollup contract will verify the data on the chain, the data needs to come from pudge, and the signature restoration is equal to the expected signature address, then the chain is successful.
 
 
 ## Usage
@@ -33,12 +31,8 @@ $ yarn test
 ```
 
 
-# Credits
-
-https://github.com/ngmachado/Waterfall
-
 # Copyright
 
-Copyright © 2022 Project Twelve
+Copyright © 2023 Project Twelve
 
 Licensed under [GPL-3.0](LICENSE)
